@@ -21,10 +21,21 @@ export async function POST(request: Request) {
     // Login mockado com sucesso
     const token = jwt.sign({ userId: "admin-123", email }, JWT_SECRET, { expiresIn: "1d" });
 
-    // Set HTTPOnly cookie
+    // Set cookie that the client can read (non-httpOnly) to update UI state, 
+    // and the secure httpOnly token for actual auth
     const response = NextResponse.json({ message: "Login realizado com sucesso", user: { id: "admin-123", email }});
+    
+    // Auth token for API calls
     response.cookies.set("auth_token", token, {
       httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 60 * 60 * 24, // 1 day
+      path: "/",
+    });
+    
+    // UI token for frontend state
+    response.cookies.set("logged_in", "true", {
+      httpOnly: false,
       secure: process.env.NODE_ENV === "production",
       maxAge: 60 * 60 * 24, // 1 day
       path: "/",

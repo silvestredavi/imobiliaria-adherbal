@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { User, LogOut, PlusCircle, Menu, X } from "lucide-react";
 
@@ -10,8 +10,12 @@ export function Header() {
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginError, setLoginError] = useState("");
 
-  // Checa se já está logado montando o componente (podemos ver pelo cookie ou session mas faremos via state simples pro MVP)
-  
+  useEffect(() => {
+    // Check if logged_in cookie exists (UI state token since auth_token is httpOnly)
+    const hasToken = document.cookie.includes("logged_in=true");
+    setIsLoggedIn(hasToken);
+  }, []);
+
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoginError("");
