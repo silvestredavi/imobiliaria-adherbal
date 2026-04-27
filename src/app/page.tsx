@@ -1,6 +1,7 @@
 import { PropertyCard } from "@/components/ui/PropertyCard";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
 import { prisma } from "@/lib/prisma";
+import { cookies } from "next/headers";
 
 async function getProperties(searchParams: { search?: string; type?: string; page?: string }) {
   const search = searchParams.search || "";
@@ -49,6 +50,9 @@ export default async function Home({
 }) {
   const resolvedSearchParams = await searchParams;
   const { properties, totalPages, currentPage } = await getProperties(resolvedSearchParams);
+  
+  const cookieStore = await cookies();
+  const isAuthenticated = cookieStore.has("auth_token");
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -120,7 +124,7 @@ export default async function Home({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {properties.length > 0 ? (
             properties.map((property) => (
-              <PropertyCard key={property.id} property={property as any} />
+              <PropertyCard key={property.id} property={property as any} isAuthenticated={isAuthenticated} />
             ))
           ) : (
             <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10 text-gray-500">

@@ -1,6 +1,9 @@
+"use client";
+
 import Link from "next/link";
-import { Bed, Bath, Maximize, MapPin, KeyRound, Home } from "lucide-react";
+import { Bed, Bath, Maximize, MapPin, KeyRound, Home, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 interface PropertyProps {
   id: string;
@@ -14,7 +17,29 @@ interface PropertyProps {
   address: string;
 }
 
-export function PropertyCard({ property }: { property: PropertyProps }) {
+export function PropertyCard({ property, isAuthenticated }: { property: PropertyProps, isAuthenticated?: boolean }) {
+  const router = useRouter();
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!confirm("Tem certeza que deseja excluir este imóvel?")) return;
+
+    try {
+      const res = await fetch(`/api/imoveis/${property.id}`, {
+        method: "DELETE",
+      });
+
+      if (res.ok) {
+        router.refresh();
+      } else {
+        alert("Erro ao excluir imóvel.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro de conexão ao tentar excluir.");
+    }
+  };
+
   // Format price to BRL
   const formattedPrice = new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -22,7 +47,17 @@ export function PropertyCard({ property }: { property: PropertyProps }) {
   }).format(property.price);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group">
+    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group relative">
+      {isAuthenticated && (
+        <button 
+          onClick={handleDelete}
+          className="absolute top-3 right-3 z-30 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-md transition-colors"
+          title="Excluir imóvel"
+        >
+          <Trash2 size={16} />
+        </button>
+      )}
+
       <Link href={`/imoveis/${property.id}`} className="block relative h-56 overflow-hidden">
         {/* Placeholder if no image */}
         <div className="absolute inset-0 bg-gray-200">
