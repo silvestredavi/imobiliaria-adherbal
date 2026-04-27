@@ -1,0 +1,304 @@
+"use client";
+
+import { useState } from "react";
+import { UploadCloud, CheckCircle, Image as ImageIcon, MapPin, Bed, Bath, Maximize, FileText, Info, X } from "lucide-react";
+
+export default function CadastrarImovelPage() {
+  const [images, setImages] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [characteristics, setCharacteristics] = useState<string[]>([]);
+  const [charInput, setCharInput] = useState("");
+
+  const handleAddCharacteristic = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (charInput.trim() && !characteristics.includes(charInput.trim())) {
+        setCharacteristics([...characteristics, charInput.trim()]);
+        setCharInput("");
+      }
+    }
+  };
+
+  const removeCharacteristic = (charToRemove: string) => {
+    setCharacteristics(characteristics.filter(c => c !== charToRemove));
+  };
+
+  // Address States
+  const [cep, setCep] = useState("");
+  const [rua, setRua] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
+
+  const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
+    const rawCep = e.target.value.replace(/\D/g, "");
+    if (rawCep.length === 8) {
+      try {
+        const res = await fetch(`https://viacep.com.br/ws/${rawCep}/json/`);
+        const data = await res.json();
+        if (!data.erro) {
+          setRua(data.logradouro || "");
+          setBairro(data.bairro || "");
+          setCidade(data.localidade || "");
+          setEstado(data.uf || "");
+        } else {
+          alert("CEP não encontrado.");
+        }
+      } catch (err) {
+        console.error("Erro ao buscar CEP", err);
+      }
+    }
+  };
+
+  const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const files = Array.from(e.target.files);
+      
+      const validFiles = files.filter(file => file.size <= 2 * 1024 * 1024); // max 2MB
+      if (validFiles.length < files.length) {
+        alert("Algumas imagens excedem o tamanho máximo de 2MB e não foram adicionadas.");
+      }
+
+      validFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImages(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const handleFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    
+    // Concatena endereço no formato antigo compatível com a base
+    const fullAddress = `${rua}, ${bairro}, ${cidade} - ${estado} | CEP: ${cep}`;
+
+    const formData = new FormData(e.currentTarget);
+    
+    const payload = {
+      title: formData.get("title"),
+      description: formData.get("description"),
+      type: formData.get("type"),
+      price: formData.get("price"),
+      area: formData.get("area"),
+      rooms: formData.get("rooms"),
+      bathrooms: formData.get("bathrooms"),
+      address: fullAddress,
+      images: images.length > 0 ? images : ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80"],
+      characteristics: characteristics,
+    };
+
+    try {
+      const res = await fetch("/api/imoveis", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (res.ok) {
+        alert("Imóvel cadastrado com sucesso!");
+        window.location.href = "/";
+      } else {
+        const errorData = await res.json();
+        alert(`Erro: ${errorData.error}`);
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erro de comunicação com o servidor.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="bg-gray-50 py-16 min-h-screen">
+      <div className="container mx-auto max-w-4xl px-4">
+        
+        <div className="mb-10 text-center">
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Cadastrar Novo Imóvel</h1>
+          <p className="text-gray-500">Preencha os detalhes abaixo para anunciar no ImobiPrime.</p>
+        </div>
+
+        <form onSubmit={handleFormSubmit} className="space-y-8">
+          
+          {/* Sessão: Informações Principais */}
+          <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+              <span className="bg-blue-100 text-blue-600 p-2 rounded-lg"><Info size={24} /></span>
+              <h2 className="text-2xl font-bold text-gray-800">Informações Principais</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Título do Anúncio *</label>
+                <input type="text" name="title" required placeholder="Ex: Lindo Apartamento em Pinheiros..." className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><FileText size={16}/> Descrição Completa *</label>
+                <textarea required name="description" rows={5} placeholder="Detalhes sobre o imóvel, diferenciais, localização..." className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Tipo de Negócio *</label>
+                <select required name="type" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white">
+                  <option value="">Selecione...</option>
+                  <option value="Venda">Venda</option>
+                  <option value="Aluguel">Aluguel</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Preço (R$) *</label>
+                <input type="number" name="price" required placeholder="Ex: 500000" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              </div>
+            </div>
+          </div>
+
+          {/* Sessão: Características e Dimensões */}
+          <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+              <span className="bg-blue-100 text-blue-600 p-2 rounded-lg"><Maximize size={24} /></span>
+              <h2 className="text-2xl font-bold text-gray-800">Detalhes & Cômodos</h2>
+            </div>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><Maximize size={16}/> Área (m²) *</label>
+                <input type="number" name="area" required placeholder="120" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><Bed size={16}/> Quartos *</label>
+                <input type="number" name="rooms" required placeholder="3" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              </div>
+              
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><Bath size={16}/> Banheiros *</label>
+                <input type="number" name="bathrooms" required placeholder="2" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+              </div>
+            </div>
+
+            <div className="mt-6">
+              <label className="block text-sm font-semibold text-gray-700 mb-1">Características (Pressione Enter para adicionar)</label>
+              <input 
+                type="text" 
+                placeholder="Ex: Piscina, Churrasqueira, Portaria 24h..." 
+                className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none mb-3"
+                value={charInput}
+                onChange={(e) => setCharInput(e.target.value)}
+                onKeyDown={handleAddCharacteristic}
+              />
+              <div className="flex gap-2 flex-wrap min-h-[32px]">
+                {characteristics.map(char => (
+                  <span key={char} className="bg-blue-100 text-blue-800 text-sm py-1 px-3 rounded-full flex items-center gap-2">
+                    {char}
+                    <button type="button" onClick={() => removeCharacteristic(char)} aria-label="Remover" className="hover:text-blue-900 focus:outline-none">
+                      <X size={14} />
+                    </button>
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Sessão: Localização */}
+          <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+              <span className="bg-blue-100 text-blue-600 p-2 rounded-lg"><MapPin size={24} /></span>
+              <h2 className="text-2xl font-bold text-gray-800">Localização</h2>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">CEP *</label>
+                <input 
+                  type="text" 
+                  name="cep" 
+                  required 
+                  placeholder="00000-000" 
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  value={cep}
+                  onChange={(e) => setCep(e.target.value)}
+                  onBlur={handleCepBlur}
+                />
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Rua/Logradouro *</label>
+                <input 
+                  type="text" 
+                  name="rua" 
+                  required 
+                  placeholder="Ex: Rua Coronel Batista" 
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  value={rua}
+                  onChange={(e) => setRua(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Bairro *</label>
+                <input 
+                  type="text" 
+                  name="bairro" 
+                  required 
+                  placeholder="Ex: Centro" 
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  value={bairro}
+                  onChange={(e) => setBairro(e.target.value)}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Cidade e UF *</label>
+                <input 
+                  type="text" 
+                  name="cidade_uf" 
+                  required 
+                  placeholder="Ex: Jambeiro - SP" 
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  value={cidade ? `${cidade} - ${estado}` : ""}
+                  readOnly // We can make this read-only or handle manual inputs separately
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Sessão: Anexo de Imagens */}
+          <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+              <span className="bg-blue-100 text-blue-600 p-2 rounded-lg"><ImageIcon size={24} /></span>
+              <h2 className="text-2xl font-bold text-gray-800">Imagens do Imóvel</h2>
+            </div>
+            
+            <div className="border-2 border-dashed border-gray-300 rounded-xl p-10 flex flex-col items-center justify-center bg-gray-50 hover:bg-gray-100 transition relative">
+              <input type="file" multiple accept="image/*" onChange={handleImageUpload} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer" />
+              <UploadCloud size={48} className="text-gray-400 mb-4" />
+              <p className="text-lg font-medium text-gray-700">Clique ou arraste imagens aqui</p>
+              <p className="text-sm text-gray-500 mt-2">JPG, PNG ou WEBP (máx. 2MB cada)</p>
+            </div>
+
+            {images.length > 0 && (
+              <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
+                {images.map((img, index) => (
+                  <div key={index} className="w-24 h-24 shrink-0 rounded-lg overflow-hidden border">
+                    <img src={img} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Botão Salvar */}
+          <div className="flex justify-end pt-4">
+            <button disabled={isSubmitting} type="submit" className={`bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-10 rounded-xl transition shadow-md flex items-center justify-center gap-2 ${isSubmitting ? 'opacity-70' : ''}`}>
+              {isSubmitting ? "Salvando..." : <><CheckCircle size={20}/> Publicar Anúncio</> }
+            </button>
+          </div>
+          
+        </form>
+      </div>
+    </div>
+  );
+}
