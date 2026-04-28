@@ -2,8 +2,9 @@ import { PropertyCard } from "@/components/ui/PropertyCard";
 import { Search, Filter, SlidersHorizontal } from "lucide-react";
 import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
+import jwt from "jsonwebtoken";
 
-async function getProperties(searchParams: { search?: string; type?: string; page?: string }) {
+async function getProperties(searchParams: { search?: string; type?: string; page?: string }, isAuthenticated: boolean) {
   const search = searchParams.search || "";
   const type = searchParams.type || "";
   const page = parseInt(searchParams.page || "1");
@@ -11,6 +12,11 @@ async function getProperties(searchParams: { search?: string; type?: string; pag
   const skip = (page - 1) * limit;
 
   const whereClause: any = {};
+  
+  if (!isAuthenticated) {
+    whereClause.exibir = true;
+  }
+
   if (search) {
     whereClause.OR = [
       { title: { contains: search } },
@@ -43,15 +49,12 @@ async function getProperties(searchParams: { search?: string; type?: string; pag
   };
 }
 
-import jwt from "jsonwebtoken";
-
 export default async function Home({
   searchParams,
 }: {
   searchParams: Promise<{ search?: string; type?: string; page?: string }>;
 }) {
   const resolvedSearchParams = await searchParams;
-  const { properties, totalPages, currentPage } = await getProperties(resolvedSearchParams);
   
   const cookieStore = await cookies();
   const token = cookieStore.get("auth_token")?.value;
@@ -66,6 +69,8 @@ export default async function Home({
       isAuthenticated = false;
     }
   }
+
+  const { properties, totalPages, currentPage } = await getProperties(resolvedSearchParams, isAuthenticated);
 
   return (
     <div className="bg-gray-50 min-h-screen">

@@ -8,6 +8,20 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth_token")?.value;
+    let isAuthenticated = false;
+
+    if (token) {
+      try {
+        const JWT_SECRET = process.env.JWT_SECRET || "imob-secret-dev-only-v1";
+        jwt.verify(token, JWT_SECRET);
+        isAuthenticated = true;
+      } catch {
+        // ignore
+      }
+    }
+
     const resolvedParams = await params;
     const id = resolvedParams.id;
 
@@ -15,7 +29,7 @@ export async function GET(
       where: { id },
     });
 
-    if (!property) {
+    if (!property || (!property.exibir && !isAuthenticated)) {
       return NextResponse.json({ error: "Imóvel não encontrado" }, { status: 404 });
     }
 
