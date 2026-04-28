@@ -1,13 +1,32 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { UploadCloud, CheckCircle, Image as ImageIcon, MapPin, Bed, Bath, Maximize, FileText, Info, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function CadastrarImovelPage() {
+  const { isLoggedIn, isLoading } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !isLoggedIn) {
+      router.push("/");
+    }
+  }, [isLoading, isLoggedIn, router]);
+
   const [images, setImages] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [characteristics, setCharacteristics] = useState<string[]>([]);
   const [charInput, setCharInput] = useState("");
+
+  if (isLoading) {
+    return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
+  }
+
+  if (!isLoggedIn) {
+    return null; // redirecting
+  }
 
   const handleAddCharacteristic = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Enter') {

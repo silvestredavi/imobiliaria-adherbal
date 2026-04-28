@@ -1,52 +1,46 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { User, LogOut, PlusCircle, Menu, X } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function Header() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { isLoggedIn, login, logout, isLoading } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [loginError, setLoginError] = useState("");
-
-  useEffect(() => {
-    // Check if logged_in cookie exists (UI state token since auth_token is httpOnly)
-    const hasToken = document.cookie.includes("logged_in=true");
-    setIsLoggedIn(hasToken);
-  }, []);
 
   const handleLogin = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setLoginError("");
     
     const formData = new FormData(e.currentTarget);
-    const email = formData.get("email");
-    const password = formData.get("password");
+    const email = formData.get("email") as string;
+    const password = formData.get("password") as string;
 
-    try {
-      const res = await fetch("/api/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password }),
-      });
-
-      if (res.ok) {
-        setIsLoggedIn(true);
-        setIsLoginModalOpen(false);
-      } else {
-        const data = await res.json();
-        setLoginError(data.error || "Erro ao fazer login");
-      }
-    } catch (err) {
-      setLoginError("Erro de conexão");
+    const result = await login(email, password);
+    if (result.success) {
+      setIsLoginModalOpen(false);
+    } else {
+      setLoginError(result.error || "Erro ao fazer login");
     }
   };
 
   const handleLogout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" });
-    setIsLoggedIn(false);
+    await logout();
   };
+
+  // Evita mostrar os botões de auth enquanto carrega
+  if (isLoading) {
+    return (
+      <header className="bg-white shadow-sm sticky top-0 z-40 h-16 flex items-center justify-between px-4 lg:px-8">
+        <Link href="/" className="text-2xl font-bold text-blue-600">
+          Adherbal <span className="text-gray-800">Imóveis</span>
+        </Link>
+      </header>
+    );
+  }
 
   return (
     <>

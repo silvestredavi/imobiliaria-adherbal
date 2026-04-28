@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import jwt from "jsonwebtoken";
+import { cookies } from "next/headers";
 
 export async function GET(request: Request) {
   try {
@@ -60,10 +62,18 @@ export async function POST(request: Request) {
   try {
     const data = await request.json();
     
-    // Auth validation using standard header handling or cookies
-    const cookieHeader = request.headers.get('cookie') || "";
-    if (!cookieHeader.includes("auth_token=")) {
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth_token")?.value;
+
+    if (!token) {
       return NextResponse.json({ error: "Acesso não autorizado" }, { status: 401 });
+    }
+
+    try {
+      const JWT_SECRET = process.env.JWT_SECRET || "imob-secret-dev-only-v1";
+      jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
     const property = await prisma.property.create({

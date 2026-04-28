@@ -43,6 +43,8 @@ async function getProperties(searchParams: { search?: string; type?: string; pag
   };
 }
 
+import jwt from "jsonwebtoken";
+
 export default async function Home({
   searchParams,
 }: {
@@ -52,7 +54,18 @@ export default async function Home({
   const { properties, totalPages, currentPage } = await getProperties(resolvedSearchParams);
   
   const cookieStore = await cookies();
-  const isAuthenticated = cookieStore.has("auth_token");
+  const token = cookieStore.get("auth_token")?.value;
+  let isAuthenticated = false;
+
+  if (token) {
+    try {
+      const JWT_SECRET = process.env.JWT_SECRET || "imob-secret-dev-only-v1";
+      jwt.verify(token, JWT_SECRET);
+      isAuthenticated = true;
+    } catch {
+      isAuthenticated = false;
+    }
+  }
 
   return (
     <div className="bg-gray-50 min-h-screen">
