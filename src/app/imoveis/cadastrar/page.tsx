@@ -1,13 +1,28 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { UploadCloud, CheckCircle, Image as ImageIcon, MapPin, Bed, Bath, Maximize, FileText, Info, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function CadastrarImovelPage() {
+function CadastrarImovelForm() {
   const { isLoggedIn, isLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const editId = searchParams.get('id');
+
+  const [images, setImages] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [characteristics, setCharacteristics] = useState<string[]>([]);
+  const [charInput, setCharInput] = useState("");
+  const [exibir, setExibir] = useState(true);
+
+  const [cep, setCep] = useState("");
+  const [rua, setRua] = useState("");
+  const [bairro, setBairro] = useState("");
+  const [cidade, setCidade] = useState("");
+  const [estado, setEstado] = useState("");
+  const [loadingProperty, setLoadingProperty] = useState(false);
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -15,17 +30,45 @@ export default function CadastrarImovelPage() {
     }
   }, [isLoading, isLoggedIn, router]);
 
-  const [images, setImages] = useState<string[]>([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [characteristics, setCharacteristics] = useState<string[]>([]);
-  const [charInput, setCharInput] = useState("");
+  useEffect(() => {
+    async function loadProperty() {
+      if (editId) {
+        setLoadingProperty(true);
+        try {
+          const res = await fetch(`/api/imoveis/${editId}`);
+          if (res.ok) {
+            const data = await res.json();
+            setImages(data.images || []);
+            setCharacteristics(data.characteristics || []);
+            setCep(""); // You might map address parts here if structured differently
+            setRua(data.address || ""); 
+            setExibir(data.exibir !== undefined ? data.exibir : true);
+            // Will need to populate form fields directly in onSubmit or map state
+            setTimeout(() => {
+              const form = document.getElementById("imovel-form") as HTMLFormElement;
+              if (form) {
+                (form.elements.namedItem("title") as HTMLInputElement).value = data.title;
+                (form.elements.namedItem("description") as HTMLTextAreaElement).value = data.description;
+                (form.elements.namedItem("price") as HTMLInputElement).value = data.price.toString();
+                (form.elements.namedItem("type") as HTMLSelectElement).value = data.type;
+                (form.elements.namedItem("rooms") as HTMLInputElement).value = data.rooms.toString();
+                (form.elements.namedItem("bathrooms") as HTMLInputElement).value = data.bathrooms.toString();
+                (form.elements.namedItem("area") as HTMLInputElement).value = data.area.toString();
+              }
+            }, 100);
+          }
+        } catch (error) {
+          console.error("Error loading property", error);
+        } finally {
+          setLoadingProperty(false);
+        }
+      }
+    }
+    loadProperty();
+  }, [editId]);
 
-  if (isLoading) {
+  if (isLoading || loadingProperty) {
     return <div className="min-h-screen flex items-center justify-center">Carregando...</div>;
-  }
-
-  if (!isLoggedIn) {
-    return null; // redirecting
   }
 
   const handleAddCharacteristic = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -42,12 +85,7 @@ export default function CadastrarImovelPage() {
     setCharacteristics(characteristics.filter(c => c !== charToRemove));
   };
 
-  // Address States
-  const [cep, setCep] = useState("");
-  const [rua, setRua] = useState("");
-  const [bairro, setBairro] = useState("");
-  const [cidade, setCidade] = useState("");
-  const [estado, setEstado] = useState("");
+  // Removed duplicated states
 
   const handleCepBlur = async (e: React.FocusEvent<HTMLInputElement>) => {
     const rawCep = e.target.value.replace(/\D/g, "");
@@ -93,11 +131,13 @@ export default function CadastrarImovelPage() {
     setIsSubmitting(true);
     
     // Concatena endereço no formato antigo compatível com a base
-    const fullAddress = `${rua}, ${bairro}, ${cidade} - ${estado} | CEP: ${cep}`;
+    const hasAddress = rua && cep;
+    const fullAddress = hasAddress ? `${rua}, ${bairro}, ${cidade} - ${estado} | CEP: ${cep}` : rua; // Falback if filled with API address directly
 
     const formData = new FormData(e.currentTarget);
     
     const payload = {
+      id: editId || undefined,
       title: formData.get("title"),
       description: formData.get("description"),
       type: formData.get("type"),
@@ -105,20 +145,22 @@ export default function CadastrarImovelPage() {
       area: formData.get("area"),
       rooms: formData.get("rooms"),
       bathrooms: formData.get("bathrooms"),
-      address: fullAddress,
+      address: hasAddress ? fullAddress : rua,
+      exibir: exibir,
       images: images.length > 0 ? images : ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80"],
       characteristics: characteristics,
     };
 
     try {
+      const isEdit = !!editId;
       const res = await fetch("/api/imoveis", {
-        method: "POST",
+        method: isEdit ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
 
       if (res.ok) {
-        alert("Imóvel cadastrado com sucesso!");
+        alert(isEdit ? "Imóvel editado com sucesso!" : "Imóvel cadastrado com sucesso!");
         window.location.href = "/";
       } else {
         const errorData = await res.json();
@@ -137,12 +179,28 @@ export default function CadastrarImovelPage() {
       <div className="container mx-auto max-w-4xl px-4">
         
         <div className="mb-10 text-center">
-          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">Cadastrar Novo Imóvel</h1>
-          <p className="text-gray-500">Preencha os detalhes abaixo para anunciar no ImobiPrime.</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-gray-800 mb-2">{editId ? "Editar Imóvel" : "Cadastrar Novo Imóvel"}</h1>
+          <p className="text-gray-500">{editId ? "Atualize os detalhes abaixo do seu anúncio." : "Preencha os detalhes abaixo para anunciar no ImobiPrime."}</p>
         </div>
 
-        <form onSubmit={handleFormSubmit} className="space-y-8">
+        <form id="imovel-form" onSubmit={handleFormSubmit} className="space-y-8">
           
+          <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200">
+            <div className="flex items-center gap-3 mb-6 border-b pb-4">
+              <span className="bg-blue-100 text-blue-600 p-2 rounded-lg"><Info size={24} /></span>
+              <h2 className="text-2xl font-bold text-gray-800">Visibilidade</h2>
+            </div>
+            <div className="flex items-center gap-3">
+              <label className="text-sm font-medium text-gray-700">Exibir anúncio publicamente?</label>
+              <input 
+                type="checkbox" 
+                checked={exibir}
+                onChange={(e) => setExibir(e.target.checked)}
+                className="w-5 h-5 text-blue-600 rounded"
+              />
+            </div>
+          </div>
+
           {/* Sessão: Informações Principais */}
           <div className="bg-white p-6 md:p-8 rounded-xl shadow-sm border border-gray-200">
             <div className="flex items-center gap-3 mb-6 border-b pb-4">
@@ -233,11 +291,10 @@ export default function CadastrarImovelPage() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">CEP *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">CEP (opcional)</label>
                 <input 
                   type="text" 
                   name="cep" 
-                  required 
                   placeholder="00000-000" 
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   value={cep}
@@ -246,12 +303,12 @@ export default function CadastrarImovelPage() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Rua/Logradouro *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Rua/Logradouro (Endereço completo) *</label>
                 <input 
                   type="text" 
                   name="rua" 
                   required 
-                  placeholder="Ex: Rua Coronel Batista" 
+                  placeholder="Ex: Rua Coronel Batista, Centro" 
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   value={rua}
                   onChange={(e) => setRua(e.target.value)}
@@ -319,5 +376,13 @@ export default function CadastrarImovelPage() {
         </form>
       </div>
     </div>
+  );
+}
+
+export default function CadastrarImovelPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen flex text-lg text-gray-500 items-center justify-center">Carregando...</div>}>
+      <CadastrarImovelForm />
+    </Suspense>
   );
 }

@@ -12,7 +12,25 @@ export async function GET(request: Request) {
     const limit = 6;
     const skip = (page - 1) * limit;
 
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth_token")?.value;
+    let isAuthenticated = false;
+
+    if (token) {
+      try {
+        const JWT_SECRET = process.env.JWT_SECRET || "imob-secret-dev-only-v1";
+        jwt.verify(token, JWT_SECRET);
+        isAuthenticated = true;
+      } catch {
+        // ignore
+      }
+    }
+
     const whereClause: any = {};
+
+    if (!isAuthenticated) {
+      whereClause.exibir = true;
+    }
 
     if (search) {
       whereClause.OR = [
@@ -88,6 +106,7 @@ export async function POST(request: Request) {
         images: JSON.stringify(data.images || []),
         characteristics: JSON.stringify(data.characteristics || []),
         address: data.address,
+        exibir: data.exibir !== undefined ? data.exibir : true,
       },
     });
 
@@ -98,5 +117,52 @@ export async function POST(request: Request) {
   } catch (error) {
     console.error("Erro ao criar imóvel:", error);
     return NextResponse.json({ error: "Erro interno do servidor" }, { status: 500 });
+  }
+}
+
+export async function PUT(request: Request) {
+  try {
+    const data = await request.json();
+    
+    if (!data.id) {
+      return NextResponse.json({ error: "ID do imóvel é obrigatório" }, { status: 400 });
+    }
+
+    const cookieStore = await cookies();
+    const token = cookieStore.get("auth_token")?.value;
+
+    if (!token) {
+      return NextResponse.json({ error: "Acesso não autorizado" }, { status: 401 });
+    }
+
+    try {
+      const JWT_SECRET = process.env.JWT_SECRET || "imob-secret-dev-only-v1";
+      jwt.verify(token, JWT_SECRET);
+    } catch (err) {
+      return NextResponse.json({ error: "Token inválido" }, { status: 401 });
+    }
+
+    const updateData: any = {};
+    if (data.title !== undefined) updateData.title = data.title;
+    if (data.description !== undefined) updateData.description = data.description;
+    if (data.price !== undefined) updateData.price = parseFloat(data.price);
+    if (data.type !== undefined) updateData.type = data.type;
+    if (data.rooms !== undefined) updateData.rooms = parseInt(data.rooms);
+    if (data.bathrooms !== undefined) updateData.bathrooms = parseInt(data.bathrooms);
+    if (data.area !== undefined) updateData.area = parseFloat(data.area);
+    if (data.images !== undefined) updateData.images = JSON.stringify(data.images);
+    if (data.characteristics !== undefined) updateData.characteristics = JSON.stringify(data.characteristics);
+    if (data.address !== undefined) updateData.address = data.address;
+    if (data.exibir !== undefined) updateData.exibir = data.exibir;
+
+    const property = await prisma.property.update({
+      where: { id: data.id },
+      data: updateData,
+    });
+
+    return NextResponse.json({ message: "Imóvel atualizado com sucesso", id: property.id });
+  } catch (error) {
+    console.error("Erro ao atualizar imóvel:", error);
+    return NextResponse.json({ error: "Erro interno do servidor ao atualizar" }, { status: 500 });
   }
 }

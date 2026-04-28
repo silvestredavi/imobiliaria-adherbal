@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Bed, Bath, Maximize, MapPin, KeyRound, Home, Trash2 } from "lucide-react";
+import { Bed, Bath, Maximize, MapPin, KeyRound, Home, Trash2, Eye, EyeOff, Edit } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 
@@ -15,10 +15,13 @@ interface PropertyProps {
   price: number;
   images: string[];
   address: string;
+  exibir?: boolean;
 }
 
 export function PropertyCard({ property, isAuthenticated }: { property: PropertyProps, isAuthenticated?: boolean }) {
   const router = useRouter();
+
+  const isHidden = property.exibir === false;
 
   const handleDelete = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -40,6 +43,29 @@ export function PropertyCard({ property, isAuthenticated }: { property: Property
     }
   };
 
+  const handleToggleVisibility = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch(`/api/imoveis`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: property.id, exibir: !property.exibir })
+      });
+      if (res.ok) {
+        router.refresh();
+      } else {
+        alert("Erro ao alterar visibilidade.");
+      }
+    } catch {
+      alert("Erro de conexão.");
+    }
+  };
+
+  const handleEdit = (e: React.MouseEvent) => {
+    e.preventDefault();
+    router.push(`/imoveis/cadastrar?id=${property.id}`);
+  };
+
   // Format price to BRL
   const formattedPrice = new Intl.NumberFormat("pt-BR", {
     style: "currency",
@@ -47,15 +73,31 @@ export function PropertyCard({ property, isAuthenticated }: { property: Property
   }).format(property.price);
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group relative">
+    <div className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group relative ${isHidden ? 'opacity-60 grayscale hover:grayscale-0' : ''}`}>
       {isAuthenticated && (
-        <button 
-          onClick={handleDelete}
-          className="absolute top-3 right-3 z-30 bg-red-600 hover:bg-red-700 text-white p-2 rounded-full shadow-md transition-colors"
-          title="Excluir imóvel"
-        >
-          <Trash2 size={16} />
-        </button>
+        <div className="absolute top-3 right-3 z-30 flex gap-2">
+          <button 
+            onClick={handleToggleVisibility}
+            className={`p-2 rounded-full shadow-md text-white transition ${isHidden ? 'bg-gray-500 hover:bg-gray-600' : 'bg-green-500 hover:bg-green-600'}`}
+            title={isHidden ? "Tornar visível" : "Ocultar anúncio"}
+          >
+            {isHidden ? <EyeOff size={16} /> : <Eye size={16} />}
+          </button>
+          <button 
+            onClick={handleEdit}
+            className="p-2 bg-blue-500 text-white rounded-full shadow-md hover:bg-blue-600 transition"
+            title="Editar anúncio"
+          >
+            <Edit size={16} />
+          </button>
+          <button 
+            onClick={handleDelete}
+            className="p-2 bg-red-600 text-white rounded-full shadow-md hover:bg-red-700 transition"
+            title="Excluir imóvel"
+          >
+            <Trash2 size={16} />
+          </button>
+        </div>
       )}
 
       <Link href={`/imoveis/${property.id}`} className="block relative h-56 overflow-hidden">

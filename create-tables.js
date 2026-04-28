@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS "Property" (
     "images" TEXT NOT NULL,
     "characteristics" TEXT NOT NULL DEFAULT '[]',
     "address" TEXT NOT NULL,
+    "exibir" BOOLEAN NOT NULL DEFAULT 1,
     "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updatedAt" DATETIME NOT NULL
 );
