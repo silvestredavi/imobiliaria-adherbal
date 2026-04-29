@@ -26,19 +26,19 @@ export default function SobreContatoPage() {
                   <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
                     <Phone size={20} />
                   </div>
-                  <span>(11) 99999-9999</span>
+                  <span>(12) 98706-8949</span>
                 </li>
                 <li className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
                     <Mail size={20} />
                   </div>
-                  <span>contato@imobiprime.com.br</span>
+                  <span>adherbalsilvestre@gmail.com</span>
                 </li>
                 <li className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0 mt-1">
                     <MapPin size={20} />
                   </div>
-                  <span>Av. Paulista, 1000<br/>Cerqueira César, São Paulo - SP</span>
+                  <span>Jambeiro - SP</span>
                 </li>
               </ul>
             </div>

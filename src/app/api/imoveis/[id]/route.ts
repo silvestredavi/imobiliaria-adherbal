@@ -35,8 +35,8 @@ export async function GET(
 
     return NextResponse.json({
       ...property,
-      images: JSON.parse(property.images),
-      characteristics: JSON.parse(property.characteristics || "[]"),
+      images: property.images ? JSON.parse(property.images) : [],
+      characteristics: property.characteristics ? JSON.parse(property.characteristics) : [],
     });
   } catch (error) {
     console.error("Erro ao buscar imóvel:", error);

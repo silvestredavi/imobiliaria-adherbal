@@ -41,8 +41,8 @@ async function getProperties(searchParams: { search?: string; type?: string; pag
   return {
     properties: properties.map((prop) => ({
       ...prop,
-      images: JSON.parse(prop.images),
-      characteristics: JSON.parse(prop.characteristics || "[]"),
+      images: prop.images ? JSON.parse(prop.images) : [],
+      characteristics: prop.characteristics ? JSON.parse(prop.characteristics) : [],
     })),
     totalPages: Math.ceil(totalCount / limit),
     currentPage: page,

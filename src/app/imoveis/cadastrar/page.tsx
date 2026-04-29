@@ -139,15 +139,15 @@ function CadastrarImovelForm() {
     const payload = {
       id: editId || undefined,
       title: formData.get("title"),
-      description: formData.get("description"),
+      description: formData.get("description") || null,
       type: formData.get("type"),
-      price: formData.get("price"),
-      area: formData.get("area"),
-      rooms: formData.get("rooms"),
-      bathrooms: formData.get("bathrooms"),
-      address: hasAddress ? fullAddress : rua,
+      price: formData.get("price") ? Number(formData.get("price")) : null,
+      area: formData.get("area") ? Number(formData.get("area")) : null,
+      rooms: formData.get("rooms") ? Number(formData.get("rooms")) : null,
+      bathrooms: formData.get("bathrooms") ? Number(formData.get("bathrooms")) : null,
+      address: hasAddress ? fullAddress : (rua || null),
       exibir: exibir,
-      images: images.length > 0 ? images : ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80"],
+      images: images.length > 0 ? images : null,
       characteristics: characteristics,
     };
 
@@ -215,8 +215,8 @@ function CadastrarImovelForm() {
               </div>
               
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><FileText size={16}/> Descrição Completa *</label>
-                <textarea required name="description" rows={5} placeholder="Detalhes sobre o imóvel, diferenciais, localização..." className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
+                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><FileText size={16}/> Descrição Completa</label>
+                <textarea name="description" rows={5} placeholder="Detalhes sobre o imóvel, diferenciais, localização..." className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"></textarea>
               </div>
 
               <div>
@@ -229,8 +229,8 @@ function CadastrarImovelForm() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Preço (R$) *</label>
-                <input type="number" name="price" required placeholder="Ex: 500000" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Preço (R$)</label>
+                <input type="number" name="price" placeholder="Ex: 500000" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
               </div>
             </div>
           </div>
@@ -244,18 +244,18 @@ function CadastrarImovelForm() {
             
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><Maximize size={16}/> Área (m²) *</label>
-                <input type="number" name="area" required placeholder="120" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><Maximize size={16}/> Área (m²)</label>
+                <input type="number" step="any" name="area" placeholder="120" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
               </div>
               
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><Bed size={16}/> Quartos *</label>
-                <input type="number" name="rooms" required placeholder="3" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><Bed size={16}/> Quartos</label>
+                <input type="number" name="rooms" placeholder="3" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
               </div>
               
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><Bath size={16}/> Banheiros *</label>
-                <input type="number" name="bathrooms" required placeholder="2" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <label className="block text-sm font-semibold text-gray-700 mb-1 flex items-center gap-2"><Bath size={16}/> Banheiros</label>
+                <input type="number" name="bathrooms" placeholder="2" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
               </div>
             </div>
 
@@ -291,7 +291,7 @@ function CadastrarImovelForm() {
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">CEP (opcional)</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">CEP</label>
                 <input 
                   type="text" 
                   name="cep" 
@@ -303,11 +303,10 @@ function CadastrarImovelForm() {
                 />
               </div>
               <div className="md:col-span-2">
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Rua/Logradouro (Endereço completo) *</label>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Rua/Logradouro (Endereço completo)</label>
                 <input 
                   type="text" 
                   name="rua" 
-                  required 
                   placeholder="Ex: Rua Coronel Batista, Centro" 
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   value={rua}

@@ -57,8 +57,8 @@ export async function GET(request: Request) {
     // Parse IMAGES JSON mapping (SQLite limitation)
     const formattedProperties = properties.map((prop) => ({
       ...prop,
-      images: JSON.parse(prop.images),
-      characteristics: JSON.parse(prop.characteristics || "[]"),
+      images: prop.images ? JSON.parse(prop.images) : [],
+      characteristics: prop.characteristics ? JSON.parse(prop.characteristics) : [],
     }));
 
     return NextResponse.json({
@@ -97,21 +97,21 @@ export async function POST(request: Request) {
     const property = await prisma.property.create({
       data: {
         title: data.title,
-        description: data.description,
-        price: parseFloat(data.price),
+        description: data.description || null,
+        price: data.price ? parseFloat(data.price) : null,
         type: data.type,
-        rooms: parseInt(data.rooms),
-        bathrooms: parseInt(data.bathrooms),
-        area: parseFloat(data.area),
-        images: JSON.stringify(data.images || []),
+        rooms: data.rooms ? parseInt(data.rooms) : null,
+        bathrooms: data.bathrooms ? parseInt(data.bathrooms) : null,
+        area: data.area ? parseFloat(data.area) : null,
+        images: JSON.stringify(data.images || ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80"]),
         characteristics: JSON.stringify(data.characteristics || []),
-        address: data.address,
+        address: data.address || null,
         exibir: data.exibir !== undefined ? data.exibir : true,
       },
     });
 
     return NextResponse.json(
-      { ...property, images: JSON.parse(property.images) },
+      { ...property, images: property.images ? JSON.parse(property.images) : [] },
       { status: 201 }
     );
   } catch (error) {
@@ -144,15 +144,15 @@ export async function PUT(request: Request) {
 
     const updateData: any = {};
     if (data.title !== undefined) updateData.title = data.title;
-    if (data.description !== undefined) updateData.description = data.description;
-    if (data.price !== undefined) updateData.price = parseFloat(data.price);
+    if (data.description !== undefined) updateData.description = data.description || null;
+    if (data.price !== undefined) updateData.price = data.price ? parseFloat(data.price) : null;
     if (data.type !== undefined) updateData.type = data.type;
-    if (data.rooms !== undefined) updateData.rooms = parseInt(data.rooms);
-    if (data.bathrooms !== undefined) updateData.bathrooms = parseInt(data.bathrooms);
-    if (data.area !== undefined) updateData.area = parseFloat(data.area);
-    if (data.images !== undefined) updateData.images = JSON.stringify(data.images);
-    if (data.characteristics !== undefined) updateData.characteristics = JSON.stringify(data.characteristics);
-    if (data.address !== undefined) updateData.address = data.address;
+    if (data.rooms !== undefined) updateData.rooms = data.rooms ? parseInt(data.rooms) : null;
+    if (data.bathrooms !== undefined) updateData.bathrooms = data.bathrooms ? parseInt(data.bathrooms) : null;
+    if (data.area !== undefined) updateData.area = data.area ? parseFloat(data.area) : null;
+    if (data.images !== undefined) updateData.images = data.images && data.images.length > 0 ? JSON.stringify(data.images) : JSON.stringify(["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80"]);
+    if (data.characteristics !== undefined) updateData.characteristics = data.characteristics ? JSON.stringify(data.characteristics) : JSON.stringify([]);
+    if (data.address !== undefined) updateData.address = data.address || null;
     if (data.exibir !== undefined) updateData.exibir = data.exibir;
 
     const property = await prisma.property.update({

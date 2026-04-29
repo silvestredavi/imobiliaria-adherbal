@@ -11,15 +11,15 @@ datasource db {
 model Property {
   id          String   @id @default(uuid())
   title       String
-  description String
-  price       Float
+  description String?
+  price       Float?
   type        String
-  rooms       Int
-  bathrooms   Int
-  area        Float
-  images      String   // Storing JSON string for SQLite array fallback
-  characteristics String @default("[]")
-  address     String
+  rooms       Int?
+  bathrooms   Int?
+  area        Float?
+  images      String?   // Storing JSON string for SQLite array fallback
+  characteristics String? @default("[]")
+  address     String?
   exibir      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
