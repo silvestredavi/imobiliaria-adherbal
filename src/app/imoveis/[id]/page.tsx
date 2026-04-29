@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Image from "next/image";
 import { Bed, Bath, Maximize, MapPin, KeyRound, CheckCircle, ChevronLeft, ChevronRight, Home, Mail, Phone } from "lucide-react";
 import Link from "next/link";
+import toast from "react-hot-toast";
 
 interface Property {
   id: string;
@@ -217,7 +218,7 @@ export default function PropertyDetailsPage() {
               <h3 className="text-xl font-bold text-gray-800 mb-4">Tenho interesse</h3>
               <p className="text-sm text-gray-500 mb-6">Preencha o formulário abaixo ou fale diretamente com o corretor.</p>
               
-              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); alert("Mensagem enviada com sucesso!"); }}>
+              <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); toast.success("Mensagem enviada com sucesso!"); }}>
                 <div>
                   <input type="text" required placeholder="Seu nome" className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500" />
                 </div>

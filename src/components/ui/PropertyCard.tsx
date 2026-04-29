@@ -4,6 +4,8 @@ import Link from "next/link";
 import { Bed, Bath, Maximize, MapPin, KeyRound, Home, Trash2, Eye, EyeOff, Edit } from "lucide-react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
+import toast from "react-hot-toast";
+import { useState } from "react";
 
 interface PropertyProps {
   id: string;
@@ -20,27 +22,31 @@ interface PropertyProps {
 
 export function PropertyCard({ property, isAuthenticated }: { property: PropertyProps, isAuthenticated?: boolean }) {
   const router = useRouter();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const isHidden = property.exibir === false;
 
-  const handleDelete = async (e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!confirm("Tem certeza que deseja excluir este imóvel?")) return;
-
+  const confirmDelete = async () => {
+    setShowDeleteModal(false);
     try {
       const res = await fetch(`/api/imoveis/${property.id}`, {
         method: "DELETE",
       });
-
       if (res.ok) {
+        toast.success("Imóvel excluído com sucesso!");
         router.refresh();
       } else {
-        alert("Erro ao excluir imóvel.");
+        toast.error("Erro ao excluir imóvel.");
       }
     } catch (err) {
       console.error(err);
-      alert("Erro de conexão ao tentar excluir.");
+      toast.error("Erro de conexão ao tentar excluir.");
     }
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.preventDefault();
+    setShowDeleteModal(true);
   };
 
   const handleToggleVisibility = async (e: React.MouseEvent) => {
@@ -52,12 +58,13 @@ export function PropertyCard({ property, isAuthenticated }: { property: Property
         body: JSON.stringify({ id: property.id, exibir: !property.exibir })
       });
       if (res.ok) {
+        toast.success(property.exibir ? "Imóvel ocultado!" : "Imóvel visível!");
         router.refresh();
       } else {
-        alert("Erro ao alterar visibilidade.");
+        toast.error("Erro ao alterar visibilidade.");
       }
     } catch {
-      alert("Erro de conexão.");
+      toast.error("Erro de conexão.");
     }
   };
 
@@ -146,6 +153,57 @@ export function PropertyCard({ property, isAuthenticated }: { property: Property
           </div>
         </div>
       </div>
+
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-[99999] flex items-center justify-center p-4">
+          <div 
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity" 
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowDeleteModal(false);
+            }} 
+          />
+          <div 
+            className="bg-white rounded-2xl p-6 sm:p-8 max-w-md w-full relative z-10 shadow-2xl transform transition-all"
+            onClick={(e) => { e.preventDefault(); e.stopPropagation(); }}
+          >
+            <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-red-100 mb-6">
+              <Trash2 className="h-7 w-7 text-red-600" aria-hidden="true" />
+            </div>
+            <h3 className="text-xl sm:text-2xl font-bold text-center text-gray-900 mb-3">
+              Excluir Imóvel
+            </h3>
+            <p className="text-center text-gray-600 mb-8 min-h-[48px]">
+              Tem certeza que deseja excluir o imóvel <strong className="text-gray-900">{property.title}</strong>? <br/> Esta ação não pode ser desfeita.
+            </p>
+            <div className="flex flex-col-reverse sm:flex-row gap-3 sm:justify-center">
+              <button
+                type="button"
+                className="w-full sm:w-auto px-6 py-3 text-sm font-semibold text-gray-700 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors focus:ring-4 focus:ring-gray-100"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setShowDeleteModal(false);
+                }}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="w-full sm:w-auto px-6 py-3 text-sm font-semibold text-white bg-red-600 rounded-xl hover:bg-red-700 transition-colors focus:ring-4 focus:ring-red-200 shadow-sm"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  confirmDelete();
+                }}
+              >
+                Sim, excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

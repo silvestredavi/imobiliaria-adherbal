@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from "react";
 import { UploadCloud, CheckCircle, Image as ImageIcon, MapPin, Bed, Bath, Maximize, FileText, Info, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, useSearchParams } from "next/navigation";
+import toast from "react-hot-toast";
 
 function CadastrarImovelForm() {
   const { isLoggedIn, isLoading } = useAuth();
@@ -22,7 +23,31 @@ function CadastrarImovelForm() {
   const [bairro, setBairro] = useState("");
   const [cidade, setCidade] = useState("");
   const [estado, setEstado] = useState("");
+  const [cidadesList, setCidadesList] = useState<{nome: string}[]>([]);
   const [loadingProperty, setLoadingProperty] = useState(false);
+
+  // hardcoded UF list
+  const ufList = [
+    "AC","AL","AP","AM","BA","CE","DF","ES","GO","MA","MT","MS","MG",
+    "PA","PB","PR","PE","PI","RJ","RN","RS","RO","RR","SC","SP","SE","TO"
+  ];
+
+  useEffect(() => {
+    if (estado) {
+      fetch(`https://servicodados.ibge.gov.br/api/v1/localidades/estados/${estado}/municipios`)
+        .then(res => res.json())
+        .then(data => {
+          if (Array.isArray(data)) {
+            // Sort alphabetical
+            const sorted = data.sort((a, b) => a.nome.localeCompare(b.nome));
+            setCidadesList(sorted);
+          }
+        })
+        .catch(err => console.error("Erro ao buscar cidades:", err));
+    } else {
+      setCidadesList([]);
+    }
+  }, [estado]);
 
   useEffect(() => {
     if (!isLoading && !isLoggedIn) {
@@ -99,7 +124,7 @@ function CadastrarImovelForm() {
           setCidade(data.localidade || "");
           setEstado(data.uf || "");
         } else {
-          alert("CEP não encontrado.");
+          toast.error("CEP não encontrado.");
         }
       } catch (err) {
         console.error("Erro ao buscar CEP", err);
@@ -113,7 +138,7 @@ function CadastrarImovelForm() {
       
       const validFiles = files.filter(file => file.size <= 2 * 1024 * 1024); // max 2MB
       if (validFiles.length < files.length) {
-        alert("Algumas imagens excedem o tamanho máximo de 2MB e não foram adicionadas.");
+        toast.error("Algumas imagens excedem o tamanho máximo de 2MB e não foram adicionadas.");
       }
 
       validFiles.forEach(file => {
@@ -160,15 +185,15 @@ function CadastrarImovelForm() {
       });
 
       if (res.ok) {
-        alert(isEdit ? "Imóvel editado com sucesso!" : "Imóvel cadastrado com sucesso!");
-        window.location.href = "/";
+        toast.success(isEdit ? "Imóvel editado com sucesso!" : "Imóvel cadastrado com sucesso!");
+        setTimeout(() => window.location.href = "/", 1500);
       } else {
         const errorData = await res.json();
-        alert(`Erro: ${errorData.error}`);
+        toast.error(`Erro: ${errorData.error}`);
       }
     } catch (err) {
       console.error(err);
-      alert("Erro de comunicação com o servidor.");
+      toast.error("Erro de comunicação com o servidor.");
     } finally {
       setIsSubmitting(false);
     }
@@ -302,6 +327,38 @@ function CadastrarImovelForm() {
                   onBlur={handleCepBlur}
                 />
               </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Estado (UF)</label>
+                <select 
+                  name="estado" 
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                  value={estado}
+                  onChange={(e) => {
+                    setEstado(e.target.value);
+                    setCidade(""); // reseta a cidade ao mudar de estado
+                  }}
+                >
+                  <option value="">Selecione...</option>
+                  {ufList.map(uf => (
+                    <option key={uf} value={uf}>{uf}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Cidade</label>
+                <select 
+                  name="cidade" 
+                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none bg-white"
+                  value={cidade}
+                  onChange={(e) => setCidade(e.target.value)}
+                  disabled={!estado || cidadesList.length === 0}
+                >
+                  <option value="">Selecione a cidade...</option>
+                  {cidadesList.map(c => (
+                    <option key={c.nome} value={c.nome}>{c.nome}</option>
+                  ))}
+                </select>
+              </div>
               <div className="md:col-span-2">
                 <label className="block text-sm font-semibold text-gray-700 mb-1">Rua/Logradouro (Endereço completo)</label>
                 <input 
@@ -313,28 +370,15 @@ function CadastrarImovelForm() {
                   onChange={(e) => setRua(e.target.value)}
                 />
               </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Bairro *</label>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Bairro</label>
                 <input 
                   type="text" 
                   name="bairro" 
-                  required 
                   placeholder="Ex: Centro" 
                   className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   value={bairro}
                   onChange={(e) => setBairro(e.target.value)}
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">Cidade e UF *</label>
-                <input 
-                  type="text" 
-                  name="cidade_uf" 
-                  required 
-                  placeholder="Ex: Jambeiro - SP" 
-                  className="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  value={cidade ? `${cidade} - ${estado}` : ""}
-                  readOnly // We can make this read-only or handle manual inputs separately
                 />
               </div>
             </div>
