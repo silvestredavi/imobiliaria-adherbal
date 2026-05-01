@@ -93,7 +93,7 @@ export default function PropertyDetailsPage() {
         </Link>
         
         {/* Carrossel de Imagens */}
-        <div className="relative h-[40vh] md:h-[60vh] rounded-2xl overflow-hidden mb-8 shadow-md group bg-black cursor-pointer" onClick={() => setIsViewerOpen(true)}>
+        <div title="Clique para ampliar a imagem" className="relative h-[40vh] md:h-[60vh] rounded-2xl overflow-hidden mb-8 shadow-md group bg-black cursor-pointer" onClick={() => setIsViewerOpen(true)}>
           {property.images && property.images.length > 0 ? (
             <Image 
               src={property.images[currentImageIndex]} 
