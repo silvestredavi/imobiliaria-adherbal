@@ -16,9 +16,32 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+
 export const metadata: Metadata = {
-  title: "Imobiliária",
-  description: "Encontre os melhores imóveis aqui.",
+  // O objeto title permite configurar um padrão para o site todo
+  title: {
+    default: "Corretor de Imóveis | Adherbal | Imóveis | Casas para alugar",
+    template: "%s | Adherbal", 
+  },
+  description: "Encontre as melhores casas à venda, terrenos e oportunidades de aluguel em Jambeiro e região com um corretor credenciado e especializado.",
+  keywords: ["imobiliária em Jambeiro", "corretor de imóveis", "casas à venda em Jambeiro", "comprar terreno", "aluguel em Jambeiro"],
+  
+  // O OpenGraph é crucial para corretagem: ele define a imagem e texto 
+  // que aparecem quando você envia o link do site no WhatsApp
+  openGraph: {
+    title: "Corretor de Imóveis em Jambeiro | Adherbal",
+    description: "Confira nossas opções de imóveis à venda e locação em Jambeiro.",
+    url: "https://www.adherbalimoveis.com.br",
+    siteName: "Adherbal Imóveis",
+    locale: "pt_BR",
+    type: "website",
+  },
+  
+  // Informações para os robôs do Google
+  robots: {
+    index: true,
+    follow: true,
+  },
 };
 
 export default function RootLayout({
