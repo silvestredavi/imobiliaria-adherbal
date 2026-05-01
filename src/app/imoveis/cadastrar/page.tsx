@@ -136,15 +136,43 @@ function CadastrarImovelForm() {
     if (e.target.files && e.target.files.length > 0) {
       const files = Array.from(e.target.files);
       
-      const validFiles = files.filter(file => file.size <= 2 * 1024 * 1024); // max 2MB
+      const validFiles = files.filter(file => file.size <= 5 * 1024 * 1024); // max 5MB (serão compactadas)
       if (validFiles.length < files.length) {
-        toast.error("Algumas imagens excedem o tamanho máximo de 2MB e não foram adicionadas.");
+        toast.error("Algumas imagens excedem o tamanho máximo de 5MB e não foram adicionadas.");
       }
 
       validFiles.forEach(file => {
         const reader = new FileReader();
         reader.onloadend = () => {
-          setImages(prev => [...prev, reader.result as string]);
+          const img = new Image();
+          img.onload = () => {
+            const canvas = document.createElement("canvas");
+            let width = img.width;
+            let height = img.height;
+            const MAX_WIDTH = 1200;
+            const MAX_HEIGHT = 1200;
+
+            if (width > height) {
+              if (width > MAX_WIDTH) {
+                height = Math.round((height *= MAX_WIDTH / width));
+                width = MAX_WIDTH;
+              }
+            } else {
+              if (height > MAX_HEIGHT) {
+                width = Math.round((width *= MAX_HEIGHT / height));
+                height = MAX_HEIGHT;
+              }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext("2d");
+            ctx?.drawImage(img, 0, 0, width, height);
+            
+            // Comprime para formato WEBP com qualidade 70%
+            const compressedBase64 = canvas.toDataURL("image/webp", 0.7);
+            setImages(prev => [...prev, compressedBase64]);
+          };
+          img.src = reader.result as string;
         };
         reader.readAsDataURL(file);
       });
@@ -401,8 +429,15 @@ function CadastrarImovelForm() {
             {images.length > 0 && (
               <div className="mt-6 flex gap-4 overflow-x-auto pb-4">
                 {images.map((img, index) => (
-                  <div key={index} className="w-24 h-24 shrink-0 rounded-lg overflow-hidden border">
+                  <div key={index} className="relative w-24 h-24 shrink-0 rounded-lg overflow-hidden border group">
                     <img src={img} alt={`Preview ${index}`} className="w-full h-full object-cover" />
+                    <button
+                      type="button"
+                      onClick={() => setImages(prev => prev.filter((_, i) => i !== index))}
+                      className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <X size={14} />
+                    </button>
                   </div>
                 ))}
               </div>

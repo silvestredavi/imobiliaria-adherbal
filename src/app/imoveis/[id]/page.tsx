@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Image from "next/image";
-import { Bed, Bath, Maximize, MapPin, KeyRound, CheckCircle, ChevronLeft, ChevronRight, Home, Mail, Phone } from "lucide-react";
+import { Bed, Bath, Maximize, MapPin, KeyRound, CheckCircle, ChevronLeft, ChevronRight, Home, Mail, Phone, X } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
 
@@ -27,6 +27,7 @@ export default function PropertyDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [isViewerOpen, setIsViewerOpen] = useState(false);
 
   useEffect(() => {
     async function loadProperty() {
@@ -92,7 +93,7 @@ export default function PropertyDetailsPage() {
         </Link>
         
         {/* Carrossel de Imagens */}
-        <div className="relative h-[40vh] md:h-[60vh] rounded-2xl overflow-hidden mb-8 shadow-md group bg-black">
+        <div className="relative h-[40vh] md:h-[60vh] rounded-2xl overflow-hidden mb-8 shadow-md group bg-black cursor-pointer" onClick={() => setIsViewerOpen(true)}>
           {property.images && property.images.length > 0 ? (
             <Image 
               src={property.images[currentImageIndex]} 
@@ -108,10 +109,10 @@ export default function PropertyDetailsPage() {
           )}
           {property.images && property.images.length > 1 && (
             <div className="absolute inset-0 flex items-center justify-between p-4 px-6 md:px-10 opacity-0 group-hover:opacity-100 transition-opacity">
-              <button onClick={prevImage} className="w-12 h-12 rounded-full bg-white/80 hover:bg-white text-gray-800 flex items-center justify-center shadow-lg transition backdrop-blur-sm">
+              <button onClick={(e) => { e.stopPropagation(); prevImage(); }} className="w-12 h-12 rounded-full bg-white/80 hover:bg-white text-gray-800 flex items-center justify-center shadow-lg transition backdrop-blur-sm">
                 <ChevronLeft size={28} />
               </button>
-              <button onClick={nextImage} className="w-12 h-12 rounded-full bg-white/80 hover:bg-white text-gray-800 flex items-center justify-center shadow-lg transition backdrop-blur-sm">
+              <button onClick={(e) => { e.stopPropagation(); nextImage(); }} className="w-12 h-12 rounded-full bg-white/80 hover:bg-white text-gray-800 flex items-center justify-center shadow-lg transition backdrop-blur-sm">
                 <ChevronRight size={28} />
               </button>
             </div>
@@ -188,22 +189,22 @@ export default function PropertyDetailsPage() {
               </div>
             )}
 
-            {/* Map iframe */}
-            <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100">
-              <h2 className="text-2xl font-bold text-gray-800 mb-4">Localização</h2>
-              <div className="w-full h-[400px] rounded-xl overflow-hidden border border-gray-200">
-                <iframe 
-                  src={mapIframeUrl} 
-                  width="100%" 
-                  height="100%" 
-                  style={{border:0}} 
-                  allowFullScreen={false} 
-                  loading="lazy" 
-                  referrerPolicy="no-referrer-when-downgrade"
-                  title={`Localização de ${property.title}`}
-                ></iframe>
-              </div>
+          {/* Map iframe */}
+          <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 mt-8">
+            <h2 className="text-2xl font-bold text-gray-800 mb-4">Localização</h2>
+            <div className="w-full h-[400px] rounded-xl overflow-hidden border border-gray-200">
+              <iframe 
+                src={mapIframeUrl} 
+                width="100%" 
+                height="100%" 
+                style={{border:0}} 
+                allowFullScreen={false} 
+                loading="lazy" 
+                referrerPolicy="no-referrer-when-downgrade"
+                title={`Localização de ${property.title}`}
+              ></iframe>
             </div>
+          </div>
 
           </div>
 
@@ -253,6 +254,47 @@ export default function PropertyDetailsPage() {
 
         </div>
       </div>
+      
+      {/* Fullscreen Image Viewer */}
+      {isViewerOpen && property?.images?.length > 0 && (
+        <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center">
+          <button 
+            onClick={() => setIsViewerOpen(false)} 
+            className="absolute top-6 right-6 text-white hover:text-gray-300 z-50"
+          >
+            <X size={36} />
+          </button>
+          
+          <div className="relative w-full h-full max-w-6xl max-h-[90vh] flex items-center justify-center p-4">
+            <Image 
+              src={property.images[currentImageIndex]} 
+              alt={property.title} 
+              fill
+              className="object-contain"
+            />
+          </div>
+
+          {property.images.length > 1 && (
+            <>
+              <button 
+                onClick={(e) => { e.stopPropagation(); prevImage(); }} 
+                className="absolute left-4 md:left-10 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+              >
+                <ChevronLeft size={36} />
+              </button>
+              <button 
+                onClick={(e) => { e.stopPropagation(); nextImage(); }} 
+                className="absolute right-4 md:right-10 top-1/2 -translate-y-1/2 w-14 h-14 rounded-full bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition"
+              >
+                <ChevronRight size={36} />
+              </button>
+              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white font-medium bg-black/50 px-4 py-2 rounded-full">
+                {currentImageIndex + 1} / {property.images.length}
+              </div>
+            </>
+          )}
+        </div>
+      )}
     </div>
   );
 }
