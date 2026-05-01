@@ -4,7 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 
-async function getProperties(searchParams: { search?: string; type?: string; page?: string }, isAuthenticated: boolean) {
+async function getProperties(searchParams: { search?: string; type?: string; page?: string }) {
   const search = searchParams.search || "";
   const type = searchParams.type || "";
   const page = parseInt(searchParams.page || "1");
@@ -12,10 +12,6 @@ async function getProperties(searchParams: { search?: string; type?: string; pag
   const skip = (page - 1) * limit;
 
   const whereClause: any = {};
-  
-  if (!isAuthenticated) {
-    whereClause.exibir = true;
-  }
 
   if (search) {
     whereClause.OR = [
@@ -56,21 +52,7 @@ export default async function Home({
 }) {
   const resolvedSearchParams = await searchParams;
   
-  const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
-  let isAuthenticated = false;
-
-  if (token) {
-    try {
-      const JWT_SECRET = process.env.JWT_SECRET || "imob-secret-dev-only-v1";
-      jwt.verify(token, JWT_SECRET);
-      isAuthenticated = true;
-    } catch {
-      isAuthenticated = false;
-    }
-  }
-
-  const { properties, totalPages, currentPage } = await getProperties(resolvedSearchParams, isAuthenticated);
+  const { properties, totalPages, currentPage } = await getProperties(resolvedSearchParams);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -142,7 +124,7 @@ export default async function Home({
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           {properties.length > 0 ? (
             properties.map((property) => (
-              <PropertyCard key={property.id} property={property as any} isAuthenticated={isAuthenticated} />
+              <PropertyCard key={property.id} property={property as any} />
             ))
           ) : (
             <div className="col-span-1 md:col-span-2 lg:col-span-3 text-center py-10 text-gray-500">

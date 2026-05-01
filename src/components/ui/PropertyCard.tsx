@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useRouter } from "next/navigation";
 import toast from "react-hot-toast";
 import { useState } from "react";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface PropertyProps {
   id: string;
@@ -20,9 +21,11 @@ interface PropertyProps {
   exibir?: boolean;
 }
 
-export function PropertyCard({ property, isAuthenticated }: { property: PropertyProps, isAuthenticated?: boolean }) {
+export function PropertyCard({ property }: { property: PropertyProps }) {
+  const { isLoggedIn } = useAuth();
   const router = useRouter();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
 
   const isHidden = property.exibir === false;
 
@@ -34,7 +37,7 @@ export function PropertyCard({ property, isAuthenticated }: { property: Property
       });
       if (res.ok) {
         toast.success("Imóvel excluído com sucesso!");
-        router.refresh();
+        setIsDeleted(true); // Oculta o card imediatamente da interface sem refetch da lista
       } else {
         toast.error("Erro ao excluir imóvel.");
       }
@@ -79,9 +82,11 @@ export function PropertyCard({ property, isAuthenticated }: { property: Property
     currency: "BRL",
   }).format(property.price);
 
+  if (isDeleted) return null;
+
   return (
     <div className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group relative ${isHidden ? 'opacity-60 grayscale hover:grayscale-0' : ''}`}>
-      {isAuthenticated && (
+      {isLoggedIn && (
         <div className="absolute top-3 right-3 z-30 flex gap-2">
           <button 
             onClick={handleToggleVisibility}

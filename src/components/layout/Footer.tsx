@@ -7,7 +7,7 @@ export function Footer() {
       <div className="w-full max-w-6xl mx-auto px-4 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="col-span-1 md:col-span-1">
           <Link href="/" className="text-2xl font-bold text-white mb-4 block">
-            Silvestre <span className="text-blue-500">Imóveis</span>
+            Adherbal <span className="text-blue-500">Imóveis</span>
           </Link>
           <p className="text-sm text-gray-400 mt-4 leading-relaxed">
             Encontre o imóvel dos seus sonhos com a melhor imobiliária da região. Especialistas em bons negócios.
