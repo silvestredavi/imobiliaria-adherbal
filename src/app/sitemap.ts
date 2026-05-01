@@ -3,7 +3,7 @@ import { prisma } from "@/lib/prisma";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   // Defina a URL base do seu site. Você pode configurar a variável de ambiente NEXT_PUBLIC_BASE_URL em produção.
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://suaimobiliaria.com.br";
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "https://adherbalimoveis.com.br";
 
   // Busca todos os imóveis que estão visíveis no banco de dados
   const properties = await prisma.property.findMany({
