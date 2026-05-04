@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { User, LogOut, PlusCircle, Menu, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { SITE_CONTENT } from "@/config/siteContent";
 
 export function Header() {
   const { isLoggedIn, login, logout, isLoading } = useAuth();
@@ -36,7 +37,7 @@ export function Header() {
     return (
       <header className="bg-white shadow-sm sticky top-0 z-40 h-16 flex items-center justify-between px-4 lg:px-8">
         <Link href="/" className="text-2xl font-bold text-blue-600">
-          Adherbal <span className="text-gray-800">Imóveis</span>
+          {SITE_CONTENT.brand.name} <span className="text-gray-800">{SITE_CONTENT.brand.segment}</span>
         </Link>
       </header>
     );
@@ -47,7 +48,7 @@ export function Header() {
       <header className="bg-white shadow-sm sticky top-0 z-40">
         <div className="w-full max-w-6xl mx-auto px-4 lg:px-8 h-16 flex items-center justify-between">
           <Link href="/" className="text-2xl font-bold text-blue-600">
-            Adherbal <span className="text-gray-800">Imóveis</span>
+            {SITE_CONTENT.brand.name} <span className="text-gray-800">{SITE_CONTENT.brand.segment}</span>
           </Link>
 
           {/* Desktop Navigation */}

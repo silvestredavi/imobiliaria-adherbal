@@ -1,23 +1,24 @@
 import { Mail, Phone, MapPin, Send } from "lucide-react";
+import { SITE_CONTENT } from "@/config/siteContent";
 
 export default function SobreContatoPage() {
   return (
     <div className="bg-gray-50 min-h-screen py-16">
       <div className="container mx-auto px-4 max-w-5xl">
         
-        <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">Sobre Nós & Contato</h1>
+        <h1 className="text-4xl font-bold text-gray-800 mb-8 text-center">{SITE_CONTENT.about.pageTitle}</h1>
         
         <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="grid grid-cols-1 md:grid-cols-2">
             
             {/* Sobre Section */}
             <div className="p-8 md:p-12 bg-blue-600 text-white">
-              <h2 className="text-3xl font-bold mb-6">Nossa História</h2>
+              <h2 className="text-3xl font-bold mb-6">{SITE_CONTENT.about.historyTitle}</h2>
               <p className="text-blue-100 mb-6 leading-relaxed">
-                A <span className="font-semibold text-white">ImobiPrime</span> atua no mercado imobiliário há mais de 15 anos. Somos especialistas em encontrar sempre o melhor negócio para nossos clientes, unindo transparência, inovação e um atendimento premium que você merece.
+                {SITE_CONTENT.about.paragraphOne}
               </p>
               <p className="text-blue-100 mb-10 leading-relaxed">
-                Seja para comprar, vender ou alugar, nossa equipe está pronta para entregar as chaves do seu próximo sonho diretamente nas suas mãos.
+                {SITE_CONTENT.about.paragraphTwo}
               </p>
 
               <h3 className="text-xl font-semibold mb-4 border-b border-blue-500 pb-2">Informações de Contato</h3>
@@ -26,19 +27,19 @@ export default function SobreContatoPage() {
                   <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
                     <Phone size={20} />
                   </div>
-                  <span>(12) 98706-8949</span>
+                  <span>{SITE_CONTENT.contact.phone}</span>
                 </li>
                 <li className="flex items-center gap-4">
                   <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center">
                     <Mail size={20} />
                   </div>
-                  <span>adherbalsilvestre@gmail.com</span>
+                  <span>{SITE_CONTENT.contact.email}</span>
                 </li>
                 <li className="flex items-start gap-4">
                   <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center shrink-0 mt-1">
                     <MapPin size={20} />
                   </div>
-                  <span>Jambeiro - SP</span>
+                  <span>{SITE_CONTENT.contact.address}</span>
                 </li>
               </ul>
             </div>

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Mail, Phone, MapPin, Share2 } from "lucide-react";
+import { SITE_CONTENT } from "@/config/siteContent";
 
 export function Footer() {
   return (
@@ -7,10 +8,10 @@ export function Footer() {
       <div className="w-full max-w-6xl mx-auto px-4 lg:px-8 grid grid-cols-1 md:grid-cols-4 gap-8">
         <div className="col-span-1 md:col-span-1">
           <Link href="/" className="text-2xl font-bold text-white mb-4 block">
-            Adherbal <span className="text-blue-500">Imóveis</span>
+            {SITE_CONTENT.brand.name} <span className="text-blue-500">{SITE_CONTENT.brand.segment}</span>
           </Link>
           <p className="text-sm text-gray-400 mt-4 leading-relaxed">
-            Encontre o imóvel dos seus sonhos com a melhor imobiliária da região. Especialistas em bons negócios.
+            {SITE_CONTENT.brand.footerDescription}
           </p>
         </div>
 
@@ -19,15 +20,15 @@ export function Footer() {
           <ul className="space-y-3">
             <li className="flex items-center gap-3 text-sm">
               <Phone size={18} className="text-blue-500 shrink-0" />
-              <span>(12) 98708-6949</span>
+              <span>{SITE_CONTENT.contact.phone}</span>
             </li>
             <li className="flex items-center gap-3 text-sm">
               <Mail size={18} className="text-blue-500 shrink-0" />
-              <span>adherbalsilvestre@gmail.com </span>
+              <span>{SITE_CONTENT.contact.email}</span>
             </li>
             <li className="flex items-start gap-3 text-sm">
               <MapPin size={18} className="text-blue-500 shrink-0 mt-0.5" />
-              <span>Jambeiro - SP</span>
+              <span>{SITE_CONTENT.contact.address}</span>
             </li>
           </ul>
         </div>
@@ -59,7 +60,7 @@ export function Footer() {
       </div>
 
       <div className="w-full max-w-6xl mx-auto px-4 lg:px-8 mt-8 pt-8 border-t border-gray-800 text-center text-sm text-gray-500">
-        <p>&copy; {new Date().getFullYear()} Adherbal Imóveis. Todos os direitos reservados.</p>
+        <p>&copy; {new Date().getFullYear()} {SITE_CONTENT.brand.fullName}. Todos os direitos reservados.</p>
       </div>
     </footer>
   );

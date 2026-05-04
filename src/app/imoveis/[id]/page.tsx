@@ -6,6 +6,7 @@ import Image from "next/image";
 import { Bed, Bath, Maximize, MapPin, KeyRound, CheckCircle, ChevronLeft, ChevronRight, Home, Mail, Phone, X } from "lucide-react";
 import Link from "next/link";
 import toast from "react-hot-toast";
+import { SITE_CONTENT } from "@/config/siteContent";
 
 interface Property {
   id: string;
@@ -82,6 +83,10 @@ export default function PropertyDetailsPage() {
   const characteristics = property.characteristics || [];
   const encodedAddress = property ? encodeURIComponent(property.address) : "";
   const mapIframeUrl = `https://maps.google.com/maps?q=${encodedAddress}&t=&z=15&ie=UTF8&iwloc=&output=embed`;
+  const whatsappMessage = encodeURIComponent(
+    `Ola, gostaria de saber mais informacoes sobre o imovel ID: ${property.id}`
+  );
+  const whatsappHref = `https://wa.me/${SITE_CONTENT.contact.whatsappNumber}?text=${whatsappMessage}`;
 
   return (
     <div className="bg-gray-50 min-h-screen pb-16">
@@ -192,7 +197,7 @@ export default function PropertyDetailsPage() {
           {/* Map iframe */}
           <div className="bg-white p-6 md:p-8 rounded-2xl shadow-sm border border-gray-100 mt-8">
             <h2 className="text-2xl font-bold text-gray-800 mb-4">Localização</h2>
-            <div className="w-full h-[400px] rounded-xl overflow-hidden border border-gray-200">
+            <div className="w-full h-100 rounded-xl overflow-hidden border border-gray-200">
               <iframe 
                 src={mapIframeUrl} 
                 width="100%" 
@@ -242,11 +247,11 @@ export default function PropertyDetailsPage() {
               </form>
 
               <div className="mt-6 pt-6 border-t border-gray-100 flex flex-col gap-3">
-                <a href={`https://wa.me/5512997383513?text=Ol%C3%A1%2C%20gostaria%20de%20saber%20mais%20informa%C3%A7%C3%B5es%20sobre%20o%20im%C3%B3vel%20ID%3A%20${property.id}`} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition">
+                <a href={whatsappHref} className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 rounded-lg flex items-center justify-center gap-2 transition">
                    Falar no WhatsApp
                 </a>
                 <div className="flex items-center justify-center gap-2 text-gray-600 mt-2">
-                  <Phone size={16} /> <span>(12) 99738-3513</span>
+                  <Phone size={16} /> <span>{SITE_CONTENT.contact.phone}</span>
                 </div>
               </div>
             </div>

@@ -4,6 +4,7 @@ import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { Toaster } from "react-hot-toast";
+import { SITE_CONTENT } from "@/config/siteContent";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -18,26 +19,15 @@ const geistMono = Geist_Mono({
 
 
 export const metadata: Metadata = {
-  // O objeto title permite configurar um padrão para o site todo
   title: {
-    default: "Corretor de Imóveis | Adherbal | Imóveis | Casas para alugar",
-    template: "%s | Adherbal", 
+    default: SITE_CONTENT.metadata.titleDefault,
+    template: SITE_CONTENT.metadata.titleTemplate,
   },
-  description: "Encontre as melhores casas à venda, terrenos e oportunidades de aluguel em Jambeiro e região com um corretor credenciado e especializado.",
-  keywords: ["imobiliária em Jambeiro", "corretor de imóveis", "casas à venda em Jambeiro", "comprar terreno", "aluguel em Jambeiro"],
-  
-  // O OpenGraph é crucial para corretagem: ele define a imagem e texto 
-  // que aparecem quando você envia o link do site no WhatsApp
+  description: SITE_CONTENT.metadata.description,
+  keywords: [...SITE_CONTENT.metadata.keywords],
   openGraph: {
-    title: "Corretor de Imóveis em Jambeiro | Adherbal",
-    description: "Confira nossas opções de imóveis à venda e locação em Jambeiro.",
-    url: "https://www.adherbalimoveis.com.br",
-    siteName: "Adherbal Imóveis",
-    locale: "pt_BR",
-    type: "website",
+    ...SITE_CONTENT.metadata.openGraph,
   },
-  
-  // Informações para os robôs do Google
   robots: {
     index: true,
     follow: true,
@@ -59,7 +49,7 @@ export default function RootLayout({
         <AuthProvider>
           <Toaster position="bottom-right" />
           <Header />
-          <main className="flex-grow">{children}</main>
+          <main className="grow">{children}</main>
           <Footer />
         </AuthProvider>
       </body>
