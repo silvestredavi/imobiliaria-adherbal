@@ -23,6 +23,10 @@ model Property {
   exibir      Boolean  @default(true)
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  @@index([createdAt])
+  @@index([exibir, createdAt])
+  @@index([type, createdAt])
 }
 
 model User {

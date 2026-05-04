@@ -11,7 +11,7 @@ export async function GET(request: Request) {
     const search = searchParams.get("search") || "";
     const type = searchParams.get("type") || "";
     const page = parseInt(searchParams.get("page") || "1");
-    const limit = 6;
+    const limit = 12;
     const skip = (page - 1) * limit;
 
     const cookieStore = await cookies();

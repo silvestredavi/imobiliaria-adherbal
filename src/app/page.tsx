@@ -46,7 +46,8 @@ async function queryProperties(
   page: number,
   onlyVisible: boolean
 ) {
-  const limit = 6;
+  const limit = 12;
+  const take = limit + 1;
   const skip = (page - 1) * limit;
 
   const whereClause: Prisma.PropertyWhereInput = {};
@@ -66,35 +67,35 @@ async function queryProperties(
     whereClause.type = { equals: type };
   }
 
-  const [properties, totalCount] = await Promise.all([
-    prisma.property.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        title: true,
-        type: true,
-        rooms: true,
-        bathrooms: true,
-        area: true,
-        price: true,
-        images: true,
-        address: true,
-        exibir: true,
-      },
-      skip,
-      take: limit,
-      orderBy: { createdAt: "desc" },
-    }),
-    prisma.property.count({ where: whereClause }),
-  ]);
+  const properties = await prisma.property.findMany({
+    where: whereClause,
+    select: {
+      id: true,
+      title: true,
+      type: true,
+      rooms: true,
+      bathrooms: true,
+      area: true,
+      price: true,
+      images: true,
+      address: true,
+      exibir: true,
+    },
+    skip,
+    take,
+    orderBy: { createdAt: "desc" },
+  });
+
+  const hasNextPage = properties.length > limit;
+  const pagedProperties = hasNextPage ? properties.slice(0, limit) : properties;
 
   return {
-    properties: properties.map((prop): HomeProperty => ({
+    properties: pagedProperties.map((prop): HomeProperty => ({
       ...prop,
       // Mantemos apenas a imagem principal para reduzir o tamanho do cache da home.
       images: parsePrimaryImage(prop.images),
     })),
-    totalPages: Math.ceil(totalCount / limit),
+    hasNextPage,
     currentPage: page,
   };
 }
@@ -145,24 +146,6 @@ function buildPageHref(page: number, search: string, type: string) {
   return `/?${params.toString()}`;
 }
 
-function getPaginationItems(currentPage: number, totalPages: number) {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-
-  const items: Array<number | string> = [1];
-  const start = Math.max(2, currentPage - 1);
-  const end = Math.min(totalPages - 1, currentPage + 1);
-
-  if (start > 2) items.push("left-ellipsis");
-  for (let i = start; i <= end; i += 1) items.push(i);
-  if (end < totalPages - 1) items.push("right-ellipsis");
-
-  items.push(totalPages);
-
-  return items;
-}
-
 export default async function Home({
   searchParams,
 }: {
@@ -176,12 +159,10 @@ export default async function Home({
   const currentSearch = (resolvedSearchParams.search || "").trim();
   const currentType = (resolvedSearchParams.type || "").trim();
 
-  const { properties, totalPages, currentPage } = await getProperties(
+  const { properties, hasNextPage, currentPage } = await getProperties(
     resolvedSearchParams,
     isAuthenticated
   );
-
-  const paginationItems = getPaginationItems(currentPage, totalPages);
 
   return (
     <div className="bg-gray-50 min-h-screen">
@@ -272,7 +253,7 @@ export default async function Home({
         </div>
 
         {/* Pagination placeholder */}
-        {totalPages > 1 && (
+        {(currentPage > 1 || hasNextPage) && (
           <div className="mt-16 flex justify-center">
             <div className="flex items-center gap-2">
               <a 
@@ -281,26 +262,14 @@ export default async function Home({
               >
                 &laquo;
               </a>
-              
-              {paginationItems.map((item) =>
-                typeof item === "number" ? (
-                  <a
-                    key={item}
-                    href={buildPageHref(item, currentSearch, currentType)}
-                    className={`w-10 h-10 rounded flex items-center justify-center transition ${currentPage === item ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-700 hover:bg-gray-200 border border-gray-200'}`}
-                  >
-                    {item}
-                  </a>
-                ) : (
-                  <span key={item} className="w-10 h-10 flex items-center justify-center text-gray-400">
-                    ...
-                  </span>
-                )
-              )}
+
+              <span className="px-4 h-10 rounded flex items-center justify-center border border-gray-200 text-sm text-gray-600 bg-white">
+                Página {currentPage}
+              </span>
 
               <a 
-                href={buildPageHref(Math.min(totalPages, currentPage + 1), currentSearch, currentType)}
-                className={`w-10 h-10 rounded flex items-center justify-center transition border border-gray-200 ${currentPage === totalPages ? 'text-gray-300 pointer-events-none' : 'text-gray-500 hover:bg-gray-200'}`}
+                href={buildPageHref(currentPage + 1, currentSearch, currentType)}
+                className={`w-10 h-10 rounded flex items-center justify-center transition border border-gray-200 ${!hasNextPage ? 'text-gray-300 pointer-events-none' : 'text-gray-500 hover:bg-gray-200'}`}
               >
                 &raquo;
               </a>

@@ -41,7 +41,7 @@ export function PropertyCard({
     <div className={`bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden hover:shadow-md transition-shadow group relative ${isHidden ? 'opacity-60 grayscale hover:grayscale-0' : ''}`}>
       {isAdmin && <PropertyCardAdminActions property={property} />}
 
-      <Link href={`/imoveis/${property.id}`} className="block relative h-56 overflow-hidden">
+      <Link href={`/imoveis/${property.id}`} prefetch={false} className="block relative h-56 overflow-hidden">
         <div className="absolute inset-0 bg-gray-200">
           <Image 
             src={property.images[0] || "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=600&q=80"}
@@ -60,7 +60,7 @@ export function PropertyCard({
       <div className="p-5">
         <div className="mb-3">
           <h3 className="text-xl font-bold text-blue-600 mb-1">{formattedPrice}</h3>
-          <Link href={`/imoveis/${property.id}`}>
+          <Link href={`/imoveis/${property.id}`} prefetch={false}>
             <h4 className="text-gray-800 font-semibold text-lg hover:text-blue-600 line-clamp-1" title={property.title}>
               {property.title}
             </h4>
