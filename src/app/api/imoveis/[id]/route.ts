@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { revalidateTag } from "next/cache";
 
 export async function GET(
   request: Request,
@@ -77,6 +78,8 @@ export async function DELETE(
     await prisma.property.delete({
       where: { id },
     });
+
+    revalidateTag("properties", "max");
 
     return NextResponse.json({ message: "Imóvel excluído com sucesso" });
   } catch (error) {

@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import jwt from "jsonwebtoken";
 import { cookies } from "next/headers";
+import { revalidateTag } from "next/cache";
+import type { Prisma } from "@prisma/client";
 
 export async function GET(request: Request) {
   try {
@@ -26,7 +28,7 @@ export async function GET(request: Request) {
       }
     }
 
-    const whereClause: any = {};
+    const whereClause: Prisma.PropertyWhereInput = {};
 
     if (!isAuthenticated) {
       whereClause.exibir = true;
@@ -110,6 +112,8 @@ export async function POST(request: Request) {
       },
     });
 
+    revalidateTag("properties", "max");
+
     return NextResponse.json(
       { ...property, images: property.images ? JSON.parse(property.images) : [] },
       { status: 201 }
@@ -142,7 +146,7 @@ export async function PUT(request: Request) {
       return NextResponse.json({ error: "Token inválido" }, { status: 401 });
     }
 
-    const updateData: any = {};
+    const updateData: Prisma.PropertyUpdateInput = {};
     if (data.title !== undefined) updateData.title = data.title;
     if (data.description !== undefined) updateData.description = data.description || null;
     if (data.price !== undefined) updateData.price = data.price ? parseFloat(data.price) : null;
@@ -159,6 +163,8 @@ export async function PUT(request: Request) {
       where: { id: data.id },
       data: updateData,
     });
+
+    revalidateTag("properties", "max");
 
     return NextResponse.json({ message: "Imóvel atualizado com sucesso", id: property.id });
   } catch (error) {

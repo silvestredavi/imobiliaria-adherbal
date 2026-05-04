@@ -13,9 +13,8 @@ const globalForPrisma = global as unknown as { prisma: PrismaClient };
 export const prisma =
   globalForPrisma.prisma ||
   new PrismaClient({
-    // @ts-ignore - Prisma 6.4.1 adapter tipagem está incompatível mas funciona em produção
     adapter,
-    log: ["query"],
+    log: process.env.NODE_ENV === "development" ? ["query", "warn", "error"] : ["error"],
   });
 
 if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
